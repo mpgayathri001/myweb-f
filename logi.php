@@ -1,7 +1,7 @@
 <?php     
 $name = $_POST['u'];
-$email= $_POST['b'];
 $message= $_POST['v'];
+$email= $_POST['b'];
 $to = $email;
 $subject = "Mail From website";
 $txt ="Name = ". $name . "\r\n  Email = " . $email . "\r\n Message =" . $message;
