@@ -11,6 +11,6 @@ if($email!=NULL){
     mail($to,$subject,$txt,$headers);
 }
 //redirect
-header("Location:sig.html");
+header("Location:https://mpgayathri001.github.io/myweb-f/sig.php");
 ?>   
  
