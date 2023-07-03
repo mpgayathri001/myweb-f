@@ -2,7 +2,7 @@
 $name = $_POST['u'];
 $email= $_POST['b'];
 $message= $_POST['v'];
-$to = "$email";
+$to = $email;
 $subject = "Mail From website";
 $txt ="Name = ". $name . "\r\n  Email = " . $email . "\r\n Message =" . $message;
 $headers = "From: noreply@yoursite.com" . "\r\n" .
