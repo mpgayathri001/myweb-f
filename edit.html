@@ -4,12 +4,21 @@
   <script>
     function fun()
       {
-        if(document.n1.u.value=="")
+        if(document.n1.u.value==null)
+        {
           alert("please fill the name");
-        else if(document.getElementById("v").value=="")
+          return false;
+        }
+        else if(document.n1.v.value==null)
+        {
           alert("please enter password");
-        else if(document.getElementById("b").value=="")
+          return false;
+        }
+        else if(document.n1.b.value==null)
+        {
           alert("please enter valid email");
+          return false;
+        }
       }
   </script>
 <style>
