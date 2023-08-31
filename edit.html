@@ -1,12 +1,4 @@
-<?php
-if(isset($_POST["SUBMIT"]))
-{
 
-
-header("Location: https://mpgayathri001.github.io/myweb-f/sig.php");
-}
-
-?>
 <html>
 <head>
 <style>
@@ -54,7 +46,7 @@ body {
 <div class="w3"> 
   <fieldset id="form" >
 <legend >SIGNUP FORM</legend>
-<form method="post" style="height:150px;align-items:center">
+<form action="http://localhost/sample.php" method="post" style="height:150px;align-items:center">
 USERNAME:<input type=textbox name="u" placeholder="please enter username"/><br>
 PASSWORD<input type=textbox name="v" placeholder="please enter password"/><br>
 E-mail<input type=email name="b" placeholder="please enter email id"/><br>
