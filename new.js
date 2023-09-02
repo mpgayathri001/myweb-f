@@ -1,4 +1,4 @@
-<script type=text/script>
+
 $('#toggle').click(function() {
    $(this).toggleClass('active');
    $('#overlay').toggleClass('open');
@@ -40,4 +40,3 @@ setInterval(function() {
   }
 }, 800);
 });
-</script>
