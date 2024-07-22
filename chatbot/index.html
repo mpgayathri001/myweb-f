@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .chat-container {
+            width: 300px;
+            margin: 50px auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        .chat-box {
+            height: 300px;
+            border: 1px solid #ddd;
+            padding: 10px;
+            overflow-y: scroll;
+        }
+        .chat-input {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .chat-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chat-button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-box" id="chat-box">
+        <p><strong>Bot:</strong> Hello! How can I help you today?</p>
+    </div>
+    <input type="text" id="user-input" class="chat-input" placeholder="Type your message...">
+    <button id="send-button" class="chat-button">Send</button>
+</div>
+
+<script>
+    document.getElementById('send-button').addEventListener('click', function() {
+        const userInput = document.getElementById('user-input').value;
+        if (userInput.trim() === '') return;
+        
+        const chatBox = document.getElementById('chat-box');
+        const userMessage = document.createElement('p');
+        userMessage.innerHTML = `<strong>You:</strong> ${userInput}`;
+        chatBox.appendChild(userMessage);
+        
+        fetch('chatbot.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: `message=${encodeURIComponent(userInput)}`,
+        })
+        .then(response => response.text())
+        .then(data => {
+            const botMessage = document.createElement('p');
+            botMessage.innerHTML = `<strong>Bot:</strong> ${data}`;
+            chatBox.appendChild(botMessage);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        })
+        .catch(error => console.error('Error:', error));
+        
+        document.getElementById('user-input').value = '';
+    });
+</script>
+
+</body>
+</html>
