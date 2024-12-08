@@ -1,0 +1,111 @@
+package javaapplication1;
+import javax.swing.*;
+import java.awt.*;
+import java.io.*;
+import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+public class CSVPreprocessing {
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> createAndShowGUI());
+    }
+
+    private static void createAndShowGUI() {
+        // Create the main frame
+        JFrame frame = new JFrame("CSV Preprocessing");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+
+        // Create a panel with preprocessing title
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+
+        // Add title to the panel
+        JLabel titleLabel = new JLabel("Preprocessing", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 20));
+        panel.add(titleLabel);
+        panel.add(Box.createVerticalStrut(10));
+
+        // Load CSV data and process
+        Object[][] cleanedData = loadCSVData(false);
+        Object[][] missingData = loadCSVData(true);
+
+        // Create JTable for cleaned data
+        JTable cleanedTable = new JTable(cleanedData, new String[]{"S.No.", "NameofState", "ActiveCases", "Cured", "Deaths", "TotalConfirmedcases"});
+        JScrollPane cleanedScrollPane = new JScrollPane(cleanedTable);
+        cleanedTable.setFillsViewportHeight(true);
+
+        // Create JTable for missing data
+        JTable missingTable = new JTable(missingData, new String[]{"S.No.", "NameofState", "ActiveCases", "Cured", "Deaths", "TotalConfirmedcases"});
+        JScrollPane missingScrollPane = new JScrollPane(missingTable);
+        missingTable.setFillsViewportHeight(true);
+
+        // Add the tables to the panel
+        panel.add(new JLabel("Cleaned Data:"));
+        panel.add(cleanedScrollPane);
+        panel.add(Box.createVerticalStrut(20));
+
+        panel.add(new JLabel("Rows with Missing/Null Values:"));
+        panel.add(missingScrollPane);
+        panel.add(Box.createVerticalStrut(20));
+
+        // Add Next button to the panel
+        JButton nextButton = new JButton("Next");
+        nextButton.addActionListener(e -> {
+            // Placeholder for next action
+            JOptionPane.showMessageDialog(frame, "Next button clicked");
+        });
+        panel.add(nextButton);
+
+        // Add panel to frame and make it visible
+        frame.add(panel);
+        frame.setVisible(true);
+    }
+
+    // Load data and return formatted for JTable
+    private static Object[][] loadCSVData(boolean missing) {
+        String csvFile = "C:\\Users\\mpgay\\OneDrive\\Desktop/covid.csv";
+        List<Object[]> rows = new ArrayList<>();
+        int expectedColumns = 6; // Define the number of expected columns
+
+        try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            String line;
+            int rowNumber = 0;
+
+            // Read the file line by line
+            while ((line = br.readLine()) != null) {
+                rowNumber++;
+
+                // Split the line into columns
+                String[] row = line.split(",");
+                boolean hasMissingData = false;
+                List<String> missingColumns = new ArrayList<>();
+
+                // Pad the row to ensure it has the correct number of columns
+                if (row.length < expectedColumns) {
+                    row = Arrays.copyOf(row, expectedColumns);
+                    for (int i = row.length; i < expectedColumns; i++) {
+                        row[i] = ""; // You can replace with "null" if you prefer
+                    }
+                }
+
+                // Check for missing or null values
+                for (int i = 0; i < row.length; i++) {
+                    if (row[i] == null || row[i].trim().isEmpty() || row[i].trim().equalsIgnoreCase("null")) {
+                        hasMissingData = true;
+                        missingColumns.add("Column " + (i + 1));
+                    }
+                }
+
+                // Add rows depending on the missing data flag
+                if ((missing && hasMissingData) || (!missing && !hasMissingData)) {
+                    rows.add(row);  // Add row to list
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return rows.toArray(new Object[0][0]);  // Convert List to Object[][] for JTable
+    }
+}
