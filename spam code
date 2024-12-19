@@ -1,0 +1,54 @@
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# Load the dataset (Spam SMS Dataset)
+url = "https://raw.githubusercontent.com/justmarkham/DAT8/master/data/sms.tsv"
+data = pd.read_csv(url, sep="\t", names=["label", "message"])
+
+# Encode the labels: 'ham' -> 0, 'spam' -> 1
+data['label'] = data['label'].map({'ham': 0, 'spam': 1})
+
+# Split data into features and labels
+X = data['message']
+y = data['label']
+
+# Convert text data into numerical format using CountVectorizer
+vectorizer = CountVectorizer()
+X_transformed = vectorizer.fit_transform(X)
+
+# Split the data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X_transformed, y, test_size=0.2, random_state=42)
+
+# Train a Naive Bayes classifier
+model = MultinomialNB()
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict(X_test)
+accuracy = accuracy_score(y_test, y_pred)
+print(f"Model Accuracy: {accuracy:.2f}")
+
+# Function to predict spam or not from user input
+def predict_spam(message):
+    # Transform the message into the same format as the training data
+    message_transformed = vectorizer.transform([message])
+    
+    # Predict whether it's spam or not
+    prediction = model.predict(message_transformed)
+    return "Spam" if prediction[0] == 1 else "Not Spam"
+
+# Input field for user to enter a message
+print("Enter a message to check if it's spam or not:")
+
+# Get user input
+user_input = input()
+
+# Predict and display the result
+result = predict_spam(user_input)
+print(f"The message is: {result}")
+
+
