@@ -1,0 +1,60 @@
+
+# Upload Kaggle API key (kaggle.json)
+from google.colab import files
+files.upload()  # Upload kaggle.json file here
+
+# Import necessary libraries
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestRegressor
+
+# Load the dataset
+data = pd.read_csv('data.csv')
+
+# Display available columns
+print("Available columns in the dataset:")
+print(data.columns)
+
+# Select relevant features and target variable
+# Updated feature selection based on available columns
+features = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors', 'sqft_above', 'sqft_basement', 'yr_built']
+X = data[features]
+y = data['price']
+
+# Split the data into training and validation sets
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the model
+model = RandomForestRegressor(random_state=42)
+model.fit(X_train, y_train)
+
+# Define a function for prediction
+def predict_price():
+    print("\nEnter house features to predict the price:")
+    bedrooms = float(input("Number of bedrooms: "))
+    bathrooms = float(input("Number of bathrooms: "))
+    sqft_living = float(input("Square footage of living space: "))
+    sqft_lot = float(input("Square footage of lot: "))
+    floors = float(input("Number of floors: "))
+    sqft_above = float(input("Square footage above ground: "))
+    sqft_basement = float(input("Square footage of basement: "))
+    yr_built = int(input("Year built: "))
+    
+    # Create a DataFrame for the input
+    input_data = pd.DataFrame({
+        'bedrooms': [bedrooms],
+        'bathrooms': [bathrooms],
+        'sqft_living': [sqft_living],
+        'sqft_lot': [sqft_lot],
+        'floors': [floors],
+        'sqft_above': [sqft_above],
+        'sqft_basement': [sqft_basement],
+        'yr_built': [yr_built]
+    })
+    
+    # Predict the price
+    predicted_price = model.predict(input_data)[0]
+    print(f"\nPredicted House Price: ${predicted_price:,.2f}")
+
+# Call the prediction function
+predict_price()
