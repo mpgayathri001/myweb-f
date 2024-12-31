@@ -1,0 +1,97 @@
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+def optimize_memory(df):
+    for col in df.columns:
+        col_type = df[col].dtype
+        if col_type == 'float64':
+            df[col] = df[col].astype('float32')
+        elif col_type == 'int64':
+            df[col] = df[col].astype('int32')
+        elif col_type == 'object':
+            df[col] = df[col].astype('category')
+    return df
+
+# Load datasets with optimized memory usage
+flight_data = optimize_memory(pd.read_csv("D:/data1.csv", low_memory=False))
+typhoon_data = optimize_memory(pd.read_csv("D:/data2.csv", low_memory=False))
+
+# Merge datasets on year and month
+data = pd.merge(flight_data, typhoon_data, on=["year", "month"], how="left")
+
+# Drop unnecessary columns
+data = data.drop(columns=["year", "month", "departure_time", "arrival_time"], errors="ignore")
+
+# Sparse one-hot encoding
+data = pd.get_dummies(data, sparse=True, drop_first=True)
+
+# Fill missing values
+data = data.fillna(0)
+
+# Optimize data further
+data = optimize_memory(data)
+
+# Extract features and target
+X = data.drop(columns=["arr_cancelled"], errors="ignore")
+y = data["arr_cancelled"]
+
+# Train-test split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Evaluate model
+y_pred = model.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Confusion Matrix:\n", confusion_matrix(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+def predict_flight_cancellation(flight_features):
+    """
+    Predict if a flight will be canceled based on input features.
+    :param flight_features: Dictionary of flight and typhoon details.
+    :return: 'Canceled' or 'Not Canceled'
+    """
+    # Convert input to DataFrame
+    input_data = pd.DataFrame([flight_features])
+    
+    # Preprocess input (ensure same format as training data)
+    input_data = pd.get_dummies(input_data, columns=categorical_columns, drop_first=True)
+    
+    # Ensure all columns match training set
+    input_data = input_data.reindex(columns=X.columns, fill_value=0)
+    
+    # Make prediction
+    prediction = model.predict(input_data)[0]
+    return "Canceled" if prediction == 1 else "Not Canceled"
+
+# Sample input for prediction
+sample_flight = {
+    "year": 2023,
+    "month": 8,
+    "carrier": "9E",
+    "carrier_name": "Endeavor Air Inc.",
+    "airport": "ABE",
+    "arr_flights": 89,
+    "arr_del15": 13,
+    "carrier_ct": 2.25,
+    "weather_ct": 1.6,
+    "nas_ct": 3.16,
+    "security_ct": 0,
+    "late_aircraft_ct": 5.99,
+    "arr_diverted": 1,
+    "arr_delay": 1375,
+    "carrier_delay": 71,
+    "weather_delay": 761,
+    "nas_delay": 118,
+    "security_delay": 0,
+    "late_aircraft_delay": 425
+}
+
+# Predict cancellation status
+result = predict_flight_cancellation(sample_flight)
+print("Flight Status:", result)
