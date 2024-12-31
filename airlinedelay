@@ -1,0 +1,109 @@
+import pandas as pd
+import xgboost as xgb
+import joblib
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
+from sklearn.metrics import accuracy_score, classification_report
+
+# Load dataset
+data = pd.read_csv('Flight Delays Dataset/flight_delays.csv')
+
+# Handle missing values and drop unnecessary columns
+data.dropna(subset=['Cancelled'], inplace=True)  # Drop rows where 'Cancelled' is missing
+data.drop(columns=['DelayReason'], inplace=True)  # Drop DelayReason column
+
+# Initialize label encoder
+label_encoder_airline = LabelEncoder()
+label_encoder_origin = LabelEncoder()
+label_encoder_destination = LabelEncoder()
+label_encoder_aircraft = LabelEncoder()
+
+# Encoding categorical columns
+data['Airline'] = label_encoder_airline.fit_transform(data['Airline'])
+data['Origin'] = label_encoder_origin.fit_transform(data['Origin'])
+data['Destination'] = label_encoder_destination.fit_transform(data['Destination'])
+data['AircraftType'] = label_encoder_aircraft.fit_transform(data['AircraftType'])
+
+# Convert date columns to datetime and extract features
+data['ScheduledDeparture'] = pd.to_datetime(data['ScheduledDeparture'])
+data['ActualDeparture'] = pd.to_datetime(data['ActualDeparture'])
+
+# Extract features from datetime columns
+data['ScheduledHour'] = data['ScheduledDeparture'].dt.hour
+data['ScheduledDayOfWeek'] = data['ScheduledDeparture'].dt.dayofweek
+data['ScheduledMonth'] = data['ScheduledDeparture'].dt.month
+data['DepartureDelay'] = (data['ActualDeparture'] - data['ScheduledDeparture']).dt.total_seconds() / 60  # in minutes
+
+# Define features (X) and target (y)
+X = data[['Airline', 'Origin', 'Destination', 'ScheduledHour', 'ScheduledDayOfWeek', 'ScheduledMonth', 'DepartureDelay', 'Distance', 'AircraftType']]
+y = data['Cancelled'].astype(int)
+
+# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the model
+model = xgb.XGBClassifier(use_label_encoder=False, eval_metric='logloss')
+model.fit(X_train, y_train)
+
+# Evaluate the model
+y_pred = model.predict(X_test)
+print("Accuracy:", accuracy_score(y_test, y_pred))
+print("Classification Report:\n", classification_report(y_test, y_pred))
+
+# Save the trained model and label encoders for later use
+joblib.dump(model, 'flight_cancellation_model.pkl')
+joblib.dump(label_encoder_airline, 'label_encoder_airline.pkl')
+joblib.dump(label_encoder_origin, 'label_encoder_origin.pkl')
+joblib.dump(label_encoder_destination, 'label_encoder_destination.pkl')
+joblib.dump(label_encoder_aircraft, 'label_encoder_aircraft.pkl')
+import pandas as pd
+import joblib
+
+# Load the trained model and label encoders
+model = joblib.load('flight_cancellation_model.pkl')
+label_encoder_airline = joblib.load('label_encoder_airline.pkl')
+label_encoder_origin = joblib.load('label_encoder_origin.pkl')
+label_encoder_destination = joblib.load('label_encoder_destination.pkl')
+label_encoder_aircraft = joblib.load('label_encoder_aircraft.pkl')
+
+# Function to predict flight cancellation
+def predict_cancellation(airline, origin, destination, aircraft_type, distance=0, scheduled_hour=12, scheduled_dayofweek=0, scheduled_month=1, departure_delay=0):
+    try:
+        # Encode categorical input data using the saved label encoders
+        airline_encoded = label_encoder_airline.transform([airline])[0]
+        origin_encoded = label_encoder_origin.transform([origin])[0]
+        destination_encoded = label_encoder_destination.transform([destination])[0]
+        aircraft_type_encoded = label_encoder_aircraft.transform([aircraft_type])[0]
+    except ValueError as e:
+        # Handle unseen labels
+        return f"Error: {str(e)}. Ensure the input labels match the trained model's labels."
+
+    # Create a DataFrame for the input data with all required features in the correct order
+    input_data = pd.DataFrame({
+        'Airline': [airline_encoded],
+        'Origin': [origin_encoded],
+        'Destination': [destination_encoded],
+        'ScheduledHour': [scheduled_hour],
+        'ScheduledDayOfWeek': [scheduled_dayofweek],
+        'ScheduledMonth': [scheduled_month],
+        'DepartureDelay': [departure_delay],
+        'Distance': [distance],
+        'AircraftType': [aircraft_type_encoded]
+    })
+
+    # Ensure the columns are in the same order as the model expects
+    input_data = input_data[['Airline', 'Origin', 'Destination', 'ScheduledHour', 'ScheduledDayOfWeek', 'ScheduledMonth', 'DepartureDelay', 'Distance', 'AircraftType']]
+
+    # Predict flight cancellation
+    prediction = model.predict(input_data)
+
+    # Return the result
+    if prediction == 1:
+        return "Flight is cancelled."
+    else:
+        return "Flight is not cancelled."
+
+# Example usage
+result = predict_cancellation('United', 'ORD', 'MIA', 'Boeing 737', distance=1031, scheduled_hour=8, scheduled_dayofweek=0, scheduled_month=1, departure_delay=8)
+print(result)
+
